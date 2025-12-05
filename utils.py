@@ -2,11 +2,11 @@ import openai
 import sqlite3
 import os
 
-# Get API key from environment variable (Streamlit Secrets)
-OPENAI_API_KEY = os.getenv("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")
+# --- OpenAI client using Streamlit secret ---
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
-# Initialize database
+# --- Database functions ---
 def init_db():
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
@@ -17,7 +17,6 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Save user progress
 def save_progress(username, question, answer, quiz=""):
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
@@ -25,7 +24,6 @@ def save_progress(username, question, answer, quiz=""):
     conn.commit()
     conn.close()
 
-# Get user progress
 def get_progress(username):
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
@@ -34,7 +32,7 @@ def get_progress(username):
     conn.close()
     return data
 
-# Mentor AI Tutor function using new OpenAI API
+# --- Mentor AI Tutor function ---
 def mentor_ai_tutor(question, premium=False, quiz=False):
     system_prompt = "You are Mentor AI Tutor, a super smart and patient AI tutor."
     if premium:
@@ -44,8 +42,9 @@ def mentor_ai_tutor(question, premium=False, quiz=False):
     else:
         system_prompt += " Provide a simple explanation suitable for students."
 
+    # --- Use gpt-3.5-turbo to avoid 404 error ---
     response = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-3.5-turbo",  # Free-tier compatible
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": question}
