@@ -1,7 +1,9 @@
 import streamlit as st
 import sqlite3
 
+st.set_page_config(page_title="Profile", page_icon="⚙️", layout="wide")
 st.title("⚙️ Profile / Settings")
+
 username = st.text_input("Enter your username:")
 
 if username:
