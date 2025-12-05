@@ -1,7 +1,9 @@
 import streamlit as st
 from utils import get_progress
 
+st.set_page_config(page_title="Quizzes", page_icon="📝", layout="wide")
 st.title("📝 Quizzes Page")
+
 username = st.text_input("Enter your username to see quizzes:")
 
 if username:
