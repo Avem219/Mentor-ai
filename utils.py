@@ -1,7 +1,8 @@
 import openai
 import sqlite3
 
-openai.api_key = "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"   
+# Use your OpenAI API key
+openai.api_key = "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"
 
 # Initialize database
 def init_db():
@@ -31,7 +32,7 @@ def get_progress(username):
     conn.close()
     return data
 
-# GPT AI Tutor
+# --- Updated Mentor AI function for openai >=1.0.0 ---
 def mentor_ai_tutor(question, premium=False, quiz=False):
     system_prompt = "You are Mentor AI Tutor, a super smart and patient AI tutor."
     if premium:
@@ -41,11 +42,13 @@ def mentor_ai_tutor(question, premium=False, quiz=False):
     else:
         system_prompt += " Provide a simple explanation suitable for students."
 
-    response = openai.ChatCompletion.create(
+    # New OpenAI API call
+    client = openai.OpenAI()
+    response = client.chat.completions.create(
         model="gpt-4",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": question}
         ]
     )
-    return response.choices[0].message['content']
+    return response.choices[0].message.content
