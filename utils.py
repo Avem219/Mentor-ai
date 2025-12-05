@@ -1,8 +1,10 @@
 import openai
 import sqlite3
+import os
 
-# Use your OpenAI API key
-openai.api_key = "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"
+# Get API key from environment variable (Streamlit Secrets)
+OPENAI_API_KEY = os.getenv("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")
+client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 # Initialize database
 def init_db():
@@ -32,7 +34,7 @@ def get_progress(username):
     conn.close()
     return data
 
-# --- Updated Mentor AI function for openai >=1.0.0 ---
+# Mentor AI Tutor function using new OpenAI API
 def mentor_ai_tutor(question, premium=False, quiz=False):
     system_prompt = "You are Mentor AI Tutor, a super smart and patient AI tutor."
     if premium:
@@ -42,8 +44,6 @@ def mentor_ai_tutor(question, premium=False, quiz=False):
     else:
         system_prompt += " Provide a simple explanation suitable for students."
 
-    # New OpenAI API call
-    client = openai.OpenAI()
     response = client.chat.completions.create(
         model="gpt-4",
         messages=[
