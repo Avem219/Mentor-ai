@@ -1,53 +1,24 @@
-import openai
-import sqlite3
+from openai import OpenAI
 import os
 
-# --- OpenAI client using Streamlit secret ---
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-client = openai.OpenAI(api_key=OPENAI_API_KEY)
+client = OpenAI(api_key=os.getenv("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"))
 
-# --- Database functions ---
-def init_db():
-    conn = sqlite3.connect("database.db")
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS users
-                 (username TEXT PRIMARY KEY, premium INTEGER)''')
-    c.execute('''CREATE TABLE IF NOT EXISTS progress
-                 (username TEXT, question TEXT, answer TEXT, quiz TEXT)''')
-    conn.commit()
-    conn.close()
-
-def save_progress(username, question, answer, quiz=""):
-    conn = sqlite3.connect("database.db")
-    c = conn.cursor()
-    c.execute("INSERT INTO progress VALUES (?, ?, ?, ?)", (username, question, answer, quiz))
-    conn.commit()
-    conn.close()
-
-def get_progress(username):
-    conn = sqlite3.connect("database.db")
-    c = conn.cursor()
-    c.execute("SELECT * FROM progress WHERE username=?", (username,))
-    data = c.fetchall()
-    conn.close()
-    return data
-
-# --- Mentor AI Tutor function ---
 def mentor_ai_tutor(question, premium=False, quiz=False):
-    system_prompt = "You are Mentor AI Tutor, a super smart and patient AI tutor."
-    if premium:
-        system_prompt += " Provide detailed step-by-step explanations."
-        if quiz:
-            system_prompt += " Also provide a short 3-question quiz for the topic."
-    else:
-        system_prompt += " Provide a simple explanation suitable for students."
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are Mentor AI Tutor."},
+                {"role": "user", "content": question}
+            ]
+        )
+        return response.choices[0].message["content"]
 
-    # --- Use gpt-3.5-turbo to avoid 404 error ---
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",  # Free-tier compatible
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": question}
-        ]
-    )
-    return response.choices[0].message.content
+    except Exception as e:
+        # Quota / billing / access issue handling
+        if "quota" in str(e).lower():
+            return "⚠️ Your AI usage limit has been reached. Please wait for reset or upgrade."
+        elif "model" in str(e).lower():
+            return "⚠️ Model not available on your account. Try gpt-3.5-turbo."
+        else:
+            return f"⚠️ Error: {str(e)}"
