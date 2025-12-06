@@ -15,10 +15,12 @@ def mentor_ai_tutor(question, premium=False, quiz=False):
         return response.choices[0].message["content"]
 
     except Exception as e:
-        # Quota / billing / access issue handling
-        if "quota" in str(e).lower():
-            return "⚠️ Your AI usage limit has been reached. Please wait for reset or upgrade."
-        elif "model" in str(e).lower():
-            return "⚠️ Model not available on your account. Try gpt-3.5-turbo."
-        else:
-            return f"⚠️ Error: {str(e)}"
+        return f"⚠️ Error: {str(e)}"
+
+
+def save_progress(user, question, answer):
+    pass  # placeholder to avoid import crash
+
+
+def init_db():
+    pass  # placeholder
