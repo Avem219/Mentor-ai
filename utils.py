@@ -1,26 +1,30 @@
-from openai import OpenAI
 import os
+import google.generativeai as genai
 
-client = OpenAI(api_key=os.getenv("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"))
+genai.configure(api_key=os.getenv("AIzaSyBkEJsWUTW1T2QRmOwMXfFWrBFw7uj3CZM"))
 
 def mentor_ai_tutor(question, premium=False, quiz=False):
     try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are Mentor AI Tutor."},
-                {"role": "user", "content": question}
-            ]
-        )
-        return response.choices[0].message["content"]
+        model = genai.GenerativeModel("gemini-pro")
+
+        style = "**Premium Detailed Mode Enabled**\n\n" if premium else ""
+        quiz_mode = "\n\nAlso create a short quiz with answers hidden." if quiz else ""
+
+        full_prompt = f"""
+You are Mentor AI Tutor, a friendly academic explainer.
+Keep explanations clear and student-friendly.
+
+{style}
+
+User question:
+{question}
+
+{quiz_mode}
+"""
+
+        response = model.generate_content(full_prompt)
+
+        return response.text
 
     except Exception as e:
         return f"⚠️ Error: {str(e)}"
-
-
-def save_progress(user, question, answer):
-    pass  # placeholder to avoid import crash
-
-
-def init_db():
-    pass  # placeholder
