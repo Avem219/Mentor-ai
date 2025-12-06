@@ -1,94 +1,30 @@
 import streamlit as st
-from utils import mentor_ai_tutor, save_progress, init_db
-import os
+from utils import mentor_ai_tutor
 
-# --- Page config ---
-st.set_page_config(page_title="Mentor AI Tutor", page_icon="🤖", layout="wide")
+st.set_page_config(
+    page_title="Mentor AI Tutor",
+    page_icon="📘",
+    layout="wide"
+)
 
-# --- Futuristic Theme CSS ---
 st.markdown("""
-<style>
-body {
-    background-color: #0f111a;
-    color: #e0e0e0;
-    font-family: 'Segoe UI', sans-serif;
-}
-.stButton>button {
-    background-color: #00fff7;
-    color: #0f111a;
-    font-weight: bold;
-    border-radius: 5px;
-}
-.chat-container {
-    background-color: #1b1f36;
-    padding: 10px;
-    border-radius: 10px;
-    margin-bottom: 10px;
-}
-.user-msg {
-    background-color: #272b45;
-    color: #00fff7;
-    padding: 8px;
-    border-radius: 10px;
-    text-align: right;
-}
-.ai-msg {
-    background-color: #00fff7;
-    color: #0f111a;
-    padding: 8px;
-    border-radius: 10px;
-    text-align: left;
-}
-</style>
+<div style='text-align:center;'>
+  <h1 style="font-size:40px; color:#10a37f;">Mentor AI Tutor 🤖📘</h1>
+  <p style="color:#555;">Ask anything & get smart, simple explanations.</p>
+</div>
 """, unsafe_allow_html=True)
 
-# --- Initialize DB ---
-init_db()
+username = st.text_input("Enter your name:")
 
-# --- Session state to store chat history ---
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+premium_user = st.toggle("🌟 Premium Mode (step-by-step + quizzes + voice)")
 
-# --- Sidebar for username and premium toggle ---
-with st.sidebar:
-    st.title("⚙️ Settings")
-    username = st.text_input("Enter your username")
-    premium_user = st.checkbox("Premium User (Step-by-step + Speechify + Quiz)")
+question = st.text_area("Your Question", height=150)
 
-# --- Chat interface ---
-st.title("🤖 Mentor AI Tutor Chat")
-
-user_input = st.text_input("Type your question here...")
-
-# --- Button to send message ---
-if st.button("Send") and user_input and username:
-    # Display user message
-    st.session_state.messages.append({"role": "user", "content": user_input})
-    
-    # Generate AI response
-    with st.spinner("Mentor AI Tutor is typing..."):
-        try:
-            answer = mentor_ai_tutor(user_input, premium=premium_user, quiz=False)
-        except Exception as e:
-            # Handle quota or other OpenAI errors gracefully
-            answer = f"[Error fetching response] {str(e)}"
-
-        st.session_state.messages.append({"role": "assistant", "content": answer})
-        save_progress(username, user_input, answer, quiz="No")
-
-        # Speechify for premium users
-        if premium_user:
-            st.markdown(f"""
-            <script>
-            var msg = new SpeechSynthesisUtterance();
-            msg.text = `{answer.replace("\\n"," ")}`;
-            window.speechSynthesis.speak(msg);
-            </script>
-            """, unsafe_allow_html=True)
-
-# --- Display chat messages ---
-for msg in st.session_state.messages:
-    if msg["role"] == "user":
-        st.markdown(f'<div class="chat-container user-msg">{msg["content"]}</div>', unsafe_allow_html=True)
-    else:
-        st.markdown(f'<div class="chat-container ai-msg">{msg["content"]}</div>', unsafe_allow_html=True)
+if st.button("Ask Mentor AI"):
+    with st.spinner("Thinking…"):
+        reply = mentor_ai_tutor(question, premium=premium_user)
+        st.markdown(f"""
+        <div style='background:#f7f7f8; padding:20px; border-radius:12px;'>
+            {reply}
+        </div>
+        """, unsafe_allow_html=True)
