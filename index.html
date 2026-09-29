@@ -1,0 +1,1732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <title>Glassmorphism Auth</title>
+
+  <style>
+    /* =========================================================
+       RESET
+    ========================================================= */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --green: #2f855a;
+      --green-dark: #276749;
+      --green-light: #68d391;
+      --text: #1f2933;
+      --muted: #667085;
+      --border: rgba(255, 255, 255, 0.82);
+      --glass: rgba(255, 255, 255, 0.45);
+      --glass-strong: rgba(255, 255, 255, 0.62);
+      --danger: #dc3545;
+      --danger-bg: rgba(220, 53, 69, 0.07);
+      --shadow:
+        0 30px 70px rgba(22, 52, 35, 0.18),
+        0 8px 25px rgba(22, 52, 35, 0.12);
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      color: var(--text);
+      background: #dcefe3;
+      overflow-x: hidden;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    /* =========================================================
+       BACKGROUND SLIDESHOW
+    ========================================================= */
+    .page {
+      position: relative;
+      min-height: 100vh;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .background-slideshow,
+    .background-slideshow::after {
+      position: absolute;
+      inset: 0;
+      z-index: -3;
+    }
+
+    .background-slideshow {
+      background: #dcefe3;
+    }
+
+    .background-slide {
+      position: absolute;
+      inset: 0;
+      background-position: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      opacity: 0;
+      transform: scale(1.04);
+      transition:
+        opacity 1.8s ease-in-out,
+        transform 7s ease-out;
+    }
+
+    .background-slide.active {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .background-slide:nth-child(1) {
+      background-image:
+        url("https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=2200&q=90");
+    }
+
+    .background-slide:nth-child(2) {
+      background-image:
+        url("https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=2200&q=90");
+    }
+
+    .background-slide:nth-child(3) {
+      background-image:
+        url("https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2200&q=90");
+    }
+
+    .background-slideshow::after {
+      content: "";
+      z-index: -2;
+      background:
+        linear-gradient(
+          135deg,
+          rgba(245, 255, 248, 0.62),
+          rgba(224, 244, 231, 0.34)
+        ),
+        linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0.12),
+          rgba(255, 255, 255, 0.28)
+        );
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+    }
+
+    /* =========================================================
+       DECORATIVE LIGHT
+    ========================================================= */
+    .ambient {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: -1;
+      filter: blur(4px);
+    }
+
+    .ambient.one {
+      width: 320px;
+      height: 320px;
+      top: -130px;
+      left: -100px;
+      background: rgba(255, 255, 255, 0.32);
+    }
+
+    .ambient.two {
+      width: 360px;
+      height: 360px;
+      right: -150px;
+      bottom: -140px;
+      background: rgba(104, 211, 145, 0.17);
+    }
+
+    /* =========================================================
+       AUTH CONTAINER
+    ========================================================= */
+    .auth-shell {
+      width: min(100%, 460px);
+      position: relative;
+    }
+
+    .auth-card {
+      position: relative;
+      width: 100%;
+      padding: 42px 40px 34px;
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      background: var(--glass);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(20px) saturate(140%);
+      -webkit-backdrop-filter: blur(20px) saturate(140%);
+      overflow: hidden;
+    }
+
+    .auth-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      background:
+        linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.32),
+          transparent 38%
+        );
+    }
+
+    .auth-card::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 8%;
+      right: 8%;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 0 18px rgba(255, 255, 255, 0.8);
+    }
+
+    /* =========================================================
+       BRAND
+    ========================================================= */
+    .brand {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .brand-mark {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 15px;
+      display: grid;
+      place-items: center;
+      border-radius: 17px;
+      color: white;
+      background:
+        linear-gradient(
+          145deg,
+          #3c9a6b,
+          #2f855a
+        );
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      box-shadow:
+        0 14px 30px rgba(47, 133, 90, 0.27),
+        inset 0 1px 1px rgba(255, 255, 255, 0.5);
+    }
+
+    .brand-mark svg {
+      width: 29px;
+      height: 29px;
+    }
+
+    .brand h1 {
+      color: #183c2b;
+      font-size: clamp(1.65rem, 4vw, 2rem);
+      font-weight: 750;
+      letter-spacing: -0.045em;
+    }
+
+    .brand p {
+      margin-top: 7px;
+      color: rgba(31, 41, 51, 0.68);
+      font-size: 0.91rem;
+      line-height: 1.5;
+    }
+
+    /* =========================================================
+       VIEW TRANSITION
+    ========================================================= */
+    .auth-view {
+      position: relative;
+      z-index: 1;
+      display: none;
+      animation: viewIn 0.4s ease both;
+    }
+
+    .auth-view.active {
+      display: block;
+    }
+
+    @keyframes viewIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* =========================================================
+       FORMS
+    ========================================================= */
+    .form-group {
+      margin-bottom: 17px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      padding-left: 2px;
+      color: #26382e;
+      font-size: 0.84rem;
+      font-weight: 650;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-wrap > svg.field-icon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      width: 18px;
+      height: 18px;
+      transform: translateY(-50%);
+      color: rgba(47, 85, 65, 0.6);
+      pointer-events: none;
+      transition: color 0.2s ease;
+    }
+
+    .form-input {
+      width: 100%;
+      min-height: 53px;
+      padding: 0 46px 0 46px;
+      color: #1f2933;
+      font-size: 0.93rem;
+      background: rgba(255, 255, 255, 0.48);
+      border: 1px solid rgba(255, 255, 255, 0.88);
+      border-radius: 15px;
+      outline: none;
+      box-shadow:
+        inset 0 1px 2px rgba(255, 255, 255, 0.48),
+        0 4px 12px rgba(36, 73, 50, 0.035);
+      transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .form-input::placeholder {
+      color: rgba(79, 94, 84, 0.58);
+    }
+
+    .form-input:hover {
+      background: rgba(255, 255, 255, 0.56);
+    }
+
+    .form-input:focus {
+      border-color: rgba(47, 133, 90, 0.68);
+      background: rgba(255, 255, 255, 0.68);
+      box-shadow:
+        0 0 0 3px rgba(47, 133, 90, 0.1),
+        0 8px 22px rgba(47, 133, 90, 0.08);
+    }
+
+    .input-wrap:focus-within .field-icon {
+      color: var(--green);
+    }
+
+    /* =========================================================
+       PASSWORD TOGGLE
+    ========================================================= */
+    .password-toggle {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      transform: translateY(-50%);
+      color: rgba(50, 70, 59, 0.65);
+      background: transparent;
+      border: 0;
+      border-radius: 10px;
+      transition:
+        color 0.2s ease,
+        background 0.2s ease;
+    }
+
+    .password-toggle:hover {
+      color: var(--green-dark);
+      background: rgba(47, 133, 90, 0.08);
+    }
+
+    .password-toggle svg {
+      width: 19px;
+      height: 19px;
+    }
+
+    /* =========================================================
+       VALIDATION
+    ========================================================= */
+    .form-input.invalid {
+      border-color: rgba(220, 53, 69, 0.72);
+      background: var(--danger-bg);
+      box-shadow:
+        0 0 0 3px rgba(220, 53, 69, 0.07);
+    }
+
+    .error-message {
+      display: none;
+      margin-top: 6px;
+      padding-left: 3px;
+      color: #c6283b;
+      font-size: 0.76rem;
+      line-height: 1.35;
+    }
+
+    .error-message.show {
+      display: block;
+      animation: errorIn 0.2s ease;
+    }
+
+    @keyframes errorIn {
+      from {
+        opacity: 0;
+        transform: translateY(-3px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* =========================================================
+       OPTIONS
+    ========================================================= */
+    .form-options {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 2px 2px 21px;
+    }
+
+    .remember {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: rgba(44, 60, 50, 0.75);
+      font-size: 0.79rem;
+      user-select: none;
+    }
+
+    .remember input {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--green);
+      cursor: pointer;
+    }
+
+    .text-link {
+      color: var(--green-dark);
+      font-size: 0.79rem;
+      font-weight: 650;
+      text-decoration: none;
+      border: 0;
+      background: transparent;
+    }
+
+    .text-link:hover {
+      text-decoration: underline;
+    }
+
+    /* =========================================================
+       PRIMARY BUTTON
+    ========================================================= */
+    .primary-button {
+      position: relative;
+      width: 100%;
+      min-height: 53px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      color: #fff;
+      font-size: 0.94rem;
+      font-weight: 700;
+      letter-spacing: 0.005em;
+      background:
+        linear-gradient(
+          135deg,
+          #3a9666,
+          #2f855a
+        );
+      border: 1px solid rgba(255, 255, 255, 0.42);
+      border-radius: 15px;
+      box-shadow:
+        0 12px 25px rgba(47, 133, 90, 0.24),
+        inset 0 1px 0 rgba(255, 255, 255, 0.23);
+      overflow: hidden;
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        filter 0.2s ease;
+    }
+
+    .primary-button::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      transform: translateX(-105%);
+      background: linear-gradient(
+        100deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+      );
+      transition: transform 0.6s ease;
+    }
+
+    .primary-button:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.03);
+      box-shadow:
+        0 15px 30px rgba(47, 133, 90, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    }
+
+    .primary-button:hover::before {
+      transform: translateX(105%);
+    }
+
+    .primary-button:active {
+      transform: translateY(0);
+    }
+
+    .primary-button svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    /* =========================================================
+       DIVIDER
+    ========================================================= */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      margin: 24px 0 17px;
+      color: rgba(61, 78, 68, 0.58);
+      font-size: 0.74rem;
+      font-weight: 550;
+      white-space: nowrap;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background:
+        linear-gradient(
+          to right,
+          transparent,
+          rgba(71, 93, 79, 0.22)
+        );
+    }
+
+    .divider::after {
+      background:
+        linear-gradient(
+          to left,
+          transparent,
+          rgba(71, 93, 79, 0.22)
+        );
+    }
+
+    /* =========================================================
+       SOCIAL BUTTONS
+    ========================================================= */
+    .social-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 11px;
+    }
+
+    .social-button {
+      min-height: 49px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      color: #27352d;
+      font-size: 0.83rem;
+      font-weight: 650;
+      background: rgba(255, 255, 255, 0.47);
+      border: 1px solid rgba(255, 255, 255, 0.88);
+      border-radius: 14px;
+      box-shadow:
+        0 6px 17px rgba(34, 61, 43, 0.055),
+        inset 0 1px 1px rgba(255, 255, 255, 0.4);
+      transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .social-button:hover {
+      background: rgba(255, 255, 255, 0.68);
+      transform: translateY(-1px);
+      box-shadow:
+        0 9px 20px rgba(34, 61, 43, 0.09);
+    }
+
+    .social-button svg {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+    }
+
+    /* =========================================================
+       SWITCH
+    ========================================================= */
+    .switch-text {
+      position: relative;
+      z-index: 1;
+      margin-top: 25px;
+      text-align: center;
+      color: rgba(40, 58, 47, 0.7);
+      font-size: 0.82rem;
+    }
+
+    .switch-button {
+      margin-left: 4px;
+      color: var(--green-dark);
+      font-weight: 750;
+      background: transparent;
+      border: 0;
+    }
+
+    .switch-button:hover {
+      text-decoration: underline;
+    }
+
+    /* =========================================================
+       LEGAL
+    ========================================================= */
+    .legal {
+      position: relative;
+      z-index: 1;
+      margin-top: 18px;
+      text-align: center;
+      color: rgba(36, 55, 43, 0.52);
+      font-size: 0.68rem;
+      line-height: 1.5;
+    }
+
+    .legal a {
+      color: rgba(39, 103, 73, 0.82);
+      text-decoration: none;
+    }
+
+    .legal a:hover {
+      text-decoration: underline;
+    }
+
+    /* =========================================================
+       SIGNUP-SPECIFIC SPACING
+    ========================================================= */
+    #signupView .brand,
+    #loginView .brand {
+      margin-bottom: 27px;
+    }
+
+    #signupView .form-group {
+      margin-bottom: 15px;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+    ========================================================= */
+    @media (max-width: 600px) {
+      .page {
+        align-items: flex-start;
+        padding: 24px 14px;
+      }
+
+      .auth-card {
+        padding: 32px 22px 27px;
+        border-radius: 24px;
+      }
+
+      .brand {
+        margin-bottom: 24px;
+      }
+
+      .brand-mark {
+        width: 51px;
+        height: 51px;
+        border-radius: 15px;
+      }
+
+      .brand h1 {
+        font-size: 1.55rem;
+      }
+
+      .brand p {
+        font-size: 0.84rem;
+      }
+
+      .social-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .social-button {
+        min-height: 48px;
+      }
+
+      .ambient.one {
+        width: 230px;
+        height: 230px;
+      }
+
+      .ambient.two {
+        width: 250px;
+        height: 250px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .page {
+        padding: 15px 10px;
+      }
+
+      .auth-card {
+        padding: 27px 17px 23px;
+      }
+
+      .form-input {
+        min-height: 50px;
+        font-size: 0.88rem;
+      }
+
+      .primary-button {
+        min-height: 50px;
+      }
+
+      .form-options {
+        align-items: flex-start;
+      }
+    }
+
+    /* =========================================================
+       REDUCED MOTION
+    ========================================================= */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+      }
+
+      .background-slide {
+        transition: opacity 0.01ms !important;
+        transform: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="page">
+
+    <!-- Background -->
+    <div class="background-slideshow" aria-hidden="true">
+      <div class="background-slide active"></div>
+      <div class="background-slide"></div>
+      <div class="background-slide"></div>
+    </div>
+
+    <!-- Ambient glass lighting -->
+    <div class="ambient one" aria-hidden="true"></div>
+    <div class="ambient two" aria-hidden="true"></div>
+
+    <section class="auth-shell" aria-label="Authentication">
+
+      <div class="auth-card">
+
+        <!-- =====================================================
+             LOGIN VIEW
+        ====================================================== -->
+        <section
+          id="loginView"
+          class="auth-view active"
+          aria-labelledby="loginTitle"
+        >
+
+          <div class="brand">
+            <div class="brand-mark" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 21s7-5.2 7-11.3A4.7 4.7 0 0 0 14.3 5c-1 0-1.8.3-2.3 1.1C11.5 5.3 10.7 5 9.7 5A4.7 4.7 0 0 0 5 9.7C5 15.8 12 21 12 21Z" />
+                <path d="M12 10.5c1.3-2 3.3-2.2 4.5-1.2" />
+              </svg>
+            </div>
+
+            <h1 id="loginTitle">Welcome back</h1>
+            <p>Sign in to continue to your account.</p>
+          </div>
+
+          <form id="loginForm" novalidate>
+
+            <!-- Email -->
+            <div class="form-group">
+              <label class="form-label" for="loginEmail">
+                Email Address
+              </label>
+
+              <div class="input-wrap">
+                <svg
+                  class="field-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="5" width="18" height="14" rx="2" />
+                  <path d="m3 7 9 6 9-6" />
+                </svg>
+
+                <input
+                  id="loginEmail"
+                  name="email"
+                  class="form-input"
+                  type="email"
+                  autocomplete="email"
+                  placeholder="you@example.com"
+                  aria-describedby="loginEmailError"
+                />
+              </div>
+
+              <div
+                id="loginEmailError"
+                class="error-message"
+                role="alert"
+              ></div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+              <label class="form-label" for="loginPassword">
+                Password
+              </label>
+
+              <div class="input-wrap">
+                <svg
+                  class="field-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="4" y="10" width="16" height="11" rx="2" />
+                  <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                </svg>
+
+                <input
+                  id="loginPassword"
+                  name="password"
+                  class="form-input"
+                  type="password"
+                  autocomplete="current-password"
+                  placeholder="Enter your password"
+                  aria-describedby="loginPasswordError"
+                />
+
+                <button
+                  class="password-toggle"
+                  type="button"
+                  data-target="loginPassword"
+                  aria-label="Show password"
+                  title="Show password"
+                >
+                  <svg
+                    class="eye-open"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+                    <circle cx="12" cy="12" r="2.7" />
+                  </svg>
+
+                  <svg
+                    class="eye-closed"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    style="display:none;"
+                  >
+                    <path d="M3 3l18 18" />
+                    <path d="M10.6 5.1A10.8 10.8 0 0 1 12 5c6 0 9.5 7 9.5 7a17.7 17.7 0 0 1-3.2 3.8" />
+                    <path d="M6.2 6.2C3.6 8.1 2.5 12 2.5 12a17.8 17.8 0 0 0 9.5 6.9 9.6 9.6 0 0 0 3-.5" />
+                  </svg>
+                </button>
+              </div>
+
+              <div
+                id="loginPasswordError"
+                class="error-message"
+                role="alert"
+              ></div>
+            </div>
+
+            <div class="form-options">
+              <label class="remember">
+                <input type="checkbox" />
+                <span>Remember me</span>
+              </label>
+
+              <button
+                type="button"
+                class="text-link"
+                id="forgotPassword"
+              >
+                Forgot password?
+              </button>
+            </div>
+
+            <button class="primary-button" type="submit">
+              <span>Sign In</span>
+
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14" />
+                <path d="m13 6 6 6-6 6" />
+              </svg>
+            </button>
+
+          </form>
+
+          <div class="divider">
+            <span>Or continue with</span>
+          </div>
+
+          <div class="social-grid">
+
+            <!-- Google -->
+            <button class="social-button" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  fill="#4285F4"
+                  d="M21.35 12.27c0-.72-.06-1.42-.18-2.09H12v3.96h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.91-4.18 2.91-7.26Z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 21.7c2.63 0 4.84-.87 6.45-2.36l-3.14-2.45c-.87.58-1.98.92-3.31.92-2.54 0-4.7-1.72-5.47-4.03H3.29v2.53A9.74 9.74 0 0 0 12 21.7Z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M6.53 13.78a5.86 5.86 0 0 1 0-3.55V7.7H3.29a9.72 9.72 0 0 0 0 8.62l3.24-2.54Z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 6.2c1.43 0 2.72.49 3.73 1.45l2.8-2.8C16.83 3.28 14.62 2.3 12 2.3a9.74 9.74 0 0 0-8.71 5.4l3.24 2.53C7.3 7.92 9.46 6.2 12 6.2Z"
+                />
+              </svg>
+
+              Google
+            </button>
+
+            <!-- Apple -->
+            <button class="social-button" type="button">
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.09.8 1.19-.24 2.33-.93 3.6-.84 1.53.12 2.68.73 3.45 1.8-3.15 1.88-2.4 6.03.49 7.19-.58 1.53-1.34 3.05-2.63 4.02ZM12.03 7.25C11.88 4.97 13.73 3.1 15.86 2.98c.3 2.63-2.39 4.58-3.83 4.27Z" />
+              </svg>
+
+              Apple
+            </button>
+
+          </div>
+
+          <p class="switch-text">
+            Don't have an account?
+            <button
+              class="switch-button"
+              type="button"
+              data-switch="signup"
+            >
+              Sign Up
+            </button>
+          </p>
+
+        </section>
+
+
+        <!-- =====================================================
+             SIGN-UP VIEW
+        ====================================================== -->
+        <section
+          id="signupView"
+          class="auth-view"
+          aria-labelledby="signupTitle"
+        >
+
+          <div class="brand">
+            <div class="brand-mark" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 21s7-5.2 7-11.3A4.7 4.7 0 0 0 14.3 5c-1 0-1.8.3-2.3 1.1C11.5 5.3 10.7 5 9.7 5A4.7 4.7 0 0 0 5 9.7C5 15.8 12 21 12 21Z" />
+                <path d="M12 10.5c1.3-2 3.3-2.2 4.5-1.2" />
+              </svg>
+            </div>
+
+            <h1 id="signupTitle">Create your account</h1>
+            <p>Join us and start your journey today.</p>
+          </div>
+
+          <form id="signupForm" novalidate>
+
+            <!-- Full Name -->
+            <div class="form-group">
+              <label class="form-label" for="signupName">
+                Full Name
+              </label>
+
+              <div class="input-wrap">
+                <svg
+                  class="field-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="8" r="3.5" />
+                  <path d="M4.5 20c.9-3.1 3.5-5 7.5-5s6.6 1.9 7.5 5" />
+                </svg>
+
+                <input
+                  id="signupName"
+                  name="fullName"
+                  class="form-input"
+                  type="text"
+                  autocomplete="name"
+                  placeholder="Your full name"
+                  aria-describedby="signupNameError"
+                />
+              </div>
+
+              <div
+                id="signupNameError"
+                class="error-message"
+                role="alert"
+              ></div>
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+              <label class="form-label" for="signupEmail">
+                Email Address
+              </label>
+
+              <div class="input-wrap">
+                <svg
+                  class="field-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="5" width="18" height="14" rx="2" />
+                  <path d="m3 7 9 6 9-6" />
+                </svg>
+
+                <input
+                  id="signupEmail"
+                  name="email"
+                  class="form-input"
+                  type="email"
+                  autocomplete="email"
+                  placeholder="you@example.com"
+                  aria-describedby="signupEmailError"
+                />
+              </div>
+
+              <div
+                id="signupEmailError"
+                class="error-message"
+                role="alert"
+              ></div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+              <label class="form-label" for="signupPassword">
+                Password
+              </label>
+
+              <div class="input-wrap">
+                <svg
+                  class="field-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="4" y="10" width="16" height="11" rx="2" />
+                  <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                </svg>
+
+                <input
+                  id="signupPassword"
+                  name="password"
+                  class="form-input"
+                  type="password"
+                  autocomplete="new-password"
+                  placeholder="At least 8 characters"
+                  aria-describedby="signupPasswordError"
+                />
+
+                <button
+                  class="password-toggle"
+                  type="button"
+                  data-target="signupPassword"
+                  aria-label="Show password"
+                  title="Show password"
+                >
+                  <svg
+                    class="eye-open"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+                    <circle cx="12" cy="12" r="2.7" />
+                  </svg>
+
+                  <svg
+                    class="eye-closed"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    style="display:none;"
+                  >
+                    <path d="M3 3l18 18" />
+                    <path d="M10.6 5.1A10.8 10.8 0 0 1 12 5c6 0 9.5 7 9.5 7a17.7 17.7 0 0 1-3.2 3.8" />
+                    <path d="M6.2 6.2C3.6 8.1 2.5 12 2.5 12a17.8 17.8 0 0 0 9.5 6.9 9.6 9.6 0 0 0 3-.5" />
+                  </svg>
+                </button>
+              </div>
+
+              <div
+                id="signupPasswordError"
+                class="error-message"
+                role="alert"
+              ></div>
+            </div>
+
+            <button class="primary-button" type="submit">
+              <span>Create Account</span>
+
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14" />
+                <path d="m13 6 6 6-6 6" />
+              </svg>
+            </button>
+
+          </form>
+
+          <div class="divider">
+            <span>Or continue with</span>
+          </div>
+
+          <div class="social-grid">
+
+            <!-- Google -->
+            <button class="social-button" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  fill="#4285F4"
+                  d="M21.35 12.27c0-.72-.06-1.42-.18-2.09H12v3.96h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.91-4.18 2.91-7.26Z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 21.7c2.63 0 4.84-.87 6.45-2.36l-3.14-2.45c-.87.58-1.98.92-3.31.92-2.54 0-4.7-1.72-5.47-4.03H3.29v2.53A9.74 9.74 0 0 0 12 21.7Z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M6.53 13.78a5.86 5.86 0 0 1 0-3.55V7.7H3.29a9.72 9.72 0 0 0 0 8.62l3.24-2.54 3.24-2.54Z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 6.2c1.43 0 2.72.49 3.73 1.45l2.8-2.8C16.83 3.28 14.62 2.3 12 2.3a9.74 9.74 0 0 0-8.71 5.4l3.24 2.53C7.3 7.92 9.46 6.2 12 6.2Z"
+                />
+              </svg>
+
+              Google
+            </button>
+
+            <!-- Apple -->
+            <button class="social-button" type="button">
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.09.8 1.19-.24 2.33-.93 3.6-.84 1.53.12 2.68.73 3.45 1.8-3.15 1.88-2.4 6.03.49 7.19-.58 1.53-1.34 3.05-2.63 4.02ZM12.03 7.25C11.88 4.97 13.73 3.1 15.86 2.98c.3 2.63-2.39 4.58-3.83 4.27Z" />
+              </svg>
+
+              Apple
+            </button>
+
+          </div>
+
+          <p class="switch-text">
+            Already have an account?
+            <button
+              class="switch-button"
+              type="button"
+              data-switch="login"
+            >
+              Sign In
+            </button>
+          </p>
+
+        </section>
+
+      </div>
+
+      <p class="legal">
+        By continuing, you agree to our
+        <a href="#" onclick="return false;">Terms of Service</a>
+        and
+        <a href="#" onclick="return false;">Privacy Policy</a>.
+      </p>
+
+    </section>
+
+  </main>
+
+
+  <script>
+    /* =========================================================
+       AUTH VIEW SWITCHING
+    ========================================================= */
+
+    const loginView = document.getElementById("loginView");
+    const signupView = document.getElementById("signupView");
+
+    const switchButtons = document.querySelectorAll("[data-switch]");
+
+    function switchView(view) {
+      const showLogin = view === "login";
+
+      loginView.classList.toggle("active", showLogin);
+      signupView.classList.toggle("active", !showLogin);
+
+      if (showLogin) {
+        loginView.setAttribute("aria-hidden", "false");
+        signupView.setAttribute("aria-hidden", "true");
+      } else {
+        loginView.setAttribute("aria-hidden", "true");
+        signupView.setAttribute("aria-hidden", "false");
+      }
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    }
+
+    switchButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        switchView(button.dataset.switch);
+      });
+    });
+
+
+    /* =========================================================
+       PASSWORD SHOW / HIDE
+    ========================================================= */
+
+    document.querySelectorAll(".password-toggle").forEach((button) => {
+      button.addEventListener("click", () => {
+        const targetId = button.dataset.target;
+        const input = document.getElementById(targetId);
+
+        const eyeOpen = button.querySelector(".eye-open");
+        const eyeClosed = button.querySelector(".eye-closed");
+
+        const isPassword = input.type === "password";
+
+        input.type = isPassword ? "text" : "password";
+
+        eyeOpen.style.display = isPassword ? "none" : "block";
+        eyeClosed.style.display = isPassword ? "block" : "none";
+
+        button.setAttribute(
+          "aria-label",
+          isPassword ? "Hide password" : "Show password"
+        );
+
+        button.setAttribute(
+          "title",
+          isPassword ? "Hide password" : "Show password"
+        );
+      });
+    });
+
+
+    /* =========================================================
+       VALIDATION HELPERS
+    ========================================================= */
+
+    const emailRegex =
+      /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
+
+    function setError(input, message) {
+      const errorElement = document.getElementById(
+        input.getAttribute("aria-describedby")
+      );
+
+      input.classList.add("invalid");
+      input.setAttribute("aria-invalid", "true");
+
+      if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.classList.add("show");
+      }
+    }
+
+    function clearError(input) {
+      const errorId = input.getAttribute("aria-describedby");
+      const errorElement = document.getElementById(errorId);
+
+      input.classList.remove("invalid");
+      input.removeAttribute("aria-invalid");
+
+      if (errorElement) {
+        errorElement.textContent = "";
+        errorElement.classList.remove("show");
+      }
+    }
+
+    function validateName(input) {
+      const value = input.value.trim();
+
+      if (!value) {
+        setError(input, "Please enter your full name.");
+        return false;
+      }
+
+      if (value.length < 2) {
+        setError(input, "Your name must contain at least 2 characters.");
+        return false;
+      }
+
+      if (!/[a-zA-ZÀ-ÿ]/.test(value)) {
+        setError(input, "Please enter a valid name.");
+        return false;
+      }
+
+      clearError(input);
+      return true;
+    }
+
+    function validateEmail(input) {
+      const value = input.value.trim();
+
+      if (!value) {
+        setError(input, "Please enter your email address.");
+        return false;
+      }
+
+      if (!emailRegex.test(value)) {
+        setError(
+          input,
+          "Please enter a valid email address."
+        );
+        return false;
+      }
+
+      clearError(input);
+      return true;
+    }
+
+    function validatePassword(input) {
+      const value = input.value;
+
+      if (!value) {
+        setError(input, "Please enter your password.");
+        return false;
+      }
+
+      if (value.length < 8) {
+        setError(
+          input,
+          "Password must be at least 8 characters long."
+        );
+        return false;
+      }
+
+      clearError(input);
+      return true;
+    }
+
+
+    /* =========================================================
+       LIVE VALIDATION
+       Errors clear immediately when the user starts typing.
+       Validation then runs again after the input changes.
+    ========================================================= */
+
+    const validationFields = [
+      {
+        input: document.getElementById("loginEmail"),
+        validator: validateEmail
+      },
+      {
+        input: document.getElementById("loginPassword"),
+        validator: validatePassword
+      },
+      {
+        input: document.getElementById("signupName"),
+        validator: validateName
+      },
+      {
+        input: document.getElementById("signupEmail"),
+        validator: validateEmail
+      },
+      {
+        input: document.getElementById("signupPassword"),
+        validator: validatePassword
+      }
+    ];
+
+    validationFields.forEach(({ input, validator }) => {
+      input.addEventListener("input", () => {
+        /*
+          Immediately remove the previous error state.
+          This prevents the form from feeling aggressive while
+          the user is correcting their input.
+        */
+        clearError(input);
+
+        /*
+          If the field has enough content to be meaningfully
+          validated, validate it live.
+        */
+        const value = input.value.trim();
+
+        if (value.length > 0) {
+          validator(input);
+        }
+      });
+
+      input.addEventListener("blur", () => {
+        validator(input);
+      });
+    });
+
+
+    /* =========================================================
+       LOGIN SUBMISSION
+    ========================================================= */
+
+    const loginForm = document.getElementById("loginForm");
+
+    loginForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const email = document.getElementById("loginEmail");
+      const password = document.getElementById("loginPassword");
+
+      const emailValid = validateEmail(email);
+      const passwordValid = validatePassword(password);
+
+      if (!emailValid || !passwordValid) {
+        const firstInvalid =
+          document.querySelector("#loginView .form-input.invalid");
+
+        if (firstInvalid) {
+          firstInvalid.focus();
+        }
+
+        return;
+      }
+
+      /*
+        Replace this section with your real authentication request.
+
+        Example:
+
+        fetch("/api/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            email: email.value.trim(),
+            password: password.value
+          })
+        });
+      */
+
+      console.log("Login form is valid.");
+    });
+
+
+    /* =========================================================
+       SIGN-UP SUBMISSION
+    ========================================================= */
+
+    const signupForm = document.getElementById("signupForm");
+
+    signupForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const name = document.getElementById("signupName");
+      const email = document.getElementById("signupEmail");
+      const password = document.getElementById("signupPassword");
+
+      const nameValid = validateName(name);
+      const emailValid = validateEmail(email);
+      const passwordValid = validatePassword(password);
+
+      if (!nameValid || !emailValid || !passwordValid) {
+        const firstInvalid =
+          document.querySelector("#signupView .form-input.invalid");
+
+        if (firstInvalid) {
+          firstInvalid.focus();
+        }
+
+        return;
+      }
+
+      /*
+        Replace this section with your real registration request.
+
+        Example:
+
+        fetch("/api/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            fullName: name.value.trim(),
+            email: email.value.trim(),
+            password: password.value
+          })
+        });
+      */
+
+      console.log("Sign-up form is valid.");
+    });
+
+
+    /* =========================================================
+       FORGOT PASSWORD
+    ========================================================= */
+
+    document
+      .getElementById("forgotPassword")
+      .addEventListener("click", () => {
+        const email = document.getElementById("loginEmail");
+
+        if (!email.value.trim()) {
+          setError(
+            email,
+            "Enter your email address first so we can help recover your account."
+          );
+
+          email.focus();
+          return;
+        }
+
+        if (!emailRegex.test(email.value.trim())) {
+          setError(
+            email,
+            "Please enter a valid email address."
+          );
+
+          email.focus();
+          return;
+        }
+
+        clearError(email);
+
+        /*
+          Connect your password-reset endpoint here.
+
+          Example:
+
+          fetch("/api/forgot-password", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              email: email.value.trim()
+            })
+          });
+        */
+
+        console.log(
+          "Password recovery requested for:",
+          email.value.trim()
+        );
+      });
+
+
+    /* =========================================================
+       BACKGROUND IMAGE SLIDESHOW
+       Cross-fades every 6 seconds.
+    ========================================================= */
+
+    const slides =
+      document.querySelectorAll(".background-slide");
+
+    let currentSlide = 0;
+
+    function nextSlide() {
+      slides[currentSlide].classList.remove("active");
+
+      currentSlide =
+        (currentSlide + 1) % slides.length;
+
+      slides[currentSlide].classList.add("active");
+    }
+
+    const reduceMotion =
+      window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+
+    if (!reduceMotion) {
+      setInterval(nextSlide, 6000);
+    }
+
+
+    /* =========================================================
+       SOCIAL BUTTON PLACEHOLDERS
+    ========================================================= */
+
+    document
+      .querySelectorAll(".social-button")
+      .forEach((button) => {
+        button.addEventListener("click", () => {
+          const provider =
+            button.textContent.trim();
+
+          /*
+            Connect the appropriate OAuth flow here.
+
+            Google:
+            /api/auth/google
+
+            Apple:
+            /api/auth/apple
+          */
+
+          console.log(
+            `${provider} authentication selected.`
+          );
+        });
+      });
+  </script>
+
+</body>
+</html>
